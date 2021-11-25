@@ -19,6 +19,7 @@ class PMF(object):
 
         self.rmse_train = []
         self.rmse_test = []
+        self.obj = []
 
     # ***Fit the model with train_tuple and evaluate RMSE on both train and test data.  ***********#
     # ***************** train_vec=TrainData, test_vec=TestData*************#
@@ -52,7 +53,7 @@ class PMF(object):
 
             # Batch update
             for batch in range(self.num_batches):  # 每次迭代要使用的数据量
-                # print "epoch %d batch %d" % (self.epoch, batch+1)
+                # print("epoch %d batch %d" % (self.epoch, batch+1))
 
                 test = np.arange(self.batch_size * batch, self.batch_size * (batch + 1))
                 batch_idx = np.mod(test, shuffled_order.shape[0])  # 本次迭代要使用的索引下标
@@ -98,6 +99,7 @@ class PMF(object):
                           + 0.5 * self._lambda * (np.linalg.norm(self.w_User) ** 2 + np.linalg.norm(self.w_Item) ** 2)
 
                     self.rmse_train.append(np.sqrt(obj / pairs_train))
+                    self.obj.append(obj)
 
                 # Compute validation error
                 if batch == self.num_batches - 1:
@@ -109,9 +111,12 @@ class PMF(object):
 
                     # Print info
                     if batch == self.num_batches - 1:
-                        print('Training RMSE: %f, Test RMSE %f' % (self.rmse_train[-1], self.rmse_test[-1]))
+                        print('obj: %f, Training RMSE: %f, Test RMSE %f' % (self.obj[-1], self.rmse_train[-1], self.rmse_test[-1]))
+
             if len(self.rmse_test) >= 3:
-                if abs(self.rmse_test[-1] - self.rmse_test[-2]) < self.CONVERGENCE_DIFF:
+                if self.rmse_test[-2] - self.rmse_test[-1] < self.CONVERGENCE_DIFF:
+            # if len(self.obj) >= 3:
+            #     if self.obj[-1] - self.obj[-2] < self.CONVERGENCE_DIFF:
                     break
 
         return self.rmse_test
